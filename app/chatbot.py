@@ -3,6 +3,11 @@ import os
 sys.path.append('src')
 
 import streamlit as st
+
+if "GROQ_API_KEY" in st.secrets:
+    os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
+
+    
 from rag_chain import ask
 
 st.set_page_config(
