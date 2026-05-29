@@ -3,6 +3,8 @@ sys.path.append('src')
 
 import os
 import time
+import mlflow
+import mlflow.tracking
 from dotenv import load_dotenv
 from groq import Groq
 from retriever import retrieve
@@ -12,6 +14,8 @@ load_dotenv()
 
 client = Groq(api_key=os.getenv('GROQ_API_KEY'))
 MODEL = 'llama-3.3-70b-versatile'
+
+mlflow.set_experiment("healthcare-rag")
 
 
 def ask(question, n_chunks=5):
@@ -23,12 +27,21 @@ def ask(question, n_chunks=5):
 
     if not chunks:
         return {
-            'answer': 'No relevant information found in the database.',
+            'answer': 'No relevant information found.',
             'sources': [],
-            'latency': 0
+            'sources_formatted': '',
+            'latency': 0,
+            'tokens': 0
         }
 
-    print(f"Found {len(chunks)} chunks. Asking Groq...")
+    avg_similarity = round(
+        sum(c['similarity'] for c in chunks) / len(chunks), 3
+    )
+    top_similarity = round(chunks[0]['similarity'], 3)
+
+    print(f"Found {len(chunks)} chunks (top similarity: {top_similarity})")
+    print("Asking Groq...")
+
     system_prompt, user_message = build_prompt(question, chunks)
 
     response = client.chat.completions.create(
@@ -45,7 +58,17 @@ def ask(question, n_chunks=5):
     latency = round(time.time() - start, 2)
     tokens = response.usage.total_tokens
 
-    print(f"Done in {latency}s | tokens used: {tokens}")
+    print(f"Done in {latency}s | tokens: {tokens}")
+
+    with mlflow.start_run():
+        mlflow.log_param("question", question[:100])
+        mlflow.log_param("model", MODEL)
+        mlflow.log_param("n_chunks", n_chunks)
+        mlflow.log_metric("latency_seconds", latency)
+        mlflow.log_metric("tokens_used", tokens)
+        mlflow.log_metric("top_similarity", top_similarity)
+        mlflow.log_metric("avg_similarity", avg_similarity)
+        mlflow.log_metric("answer_length", len(answer))
 
     return {
         'answer': answer,
@@ -57,11 +80,9 @@ def ask(question, n_chunks=5):
 
 
 if __name__ == '__main__':
-    result = ask("What is the treatment for Type 2 diabetes?")
+    result = ask("What is the role of metformin in diabetes treatment?")
     print("\n" + "="*60)
     print("ANSWER:")
-    print("="*60)
     print(result['answer'])
-    print("\nSOURCES USED:")
+    print("\nSOURCES:")
     print(result['sources_formatted'])
-    print(f"\nLatency: {result['latency']}s | Tokens: {result['tokens']}")
