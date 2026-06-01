@@ -1,14 +1,13 @@
 streamlit==1.41.0
 groq
 sentence-transformers
-chromadb==0.4.24
 pandas
 requests
 python-dotenv
 fastapi
 uvicorn
 pydantic
-numpy==1.26.4
+numpy
 torch
 transformers
 tokenizers
