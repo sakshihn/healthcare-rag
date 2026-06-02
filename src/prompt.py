@@ -1,4 +1,4 @@
-def build_prompt(question, chunks):
+def build_prompt(question, chunks, chat_history=None):
     context_parts = []
     for i, chunk in enumerate(chunks):
         context_parts.append(
@@ -14,12 +14,20 @@ Rules you must follow:
 - If the sources don't contain enough information, say so honestly
 - Never make up medical information
 - Keep answers clear and factual
-- Do not recommend treatments to individuals"""
+- Do not recommend treatments to individuals
+- Consider previous questions in the conversation for context"""
+
+    history_text = ""
+    if chat_history:
+        history_text = "\n\nPrevious conversation:\n"
+        for msg in chat_history[-4:]:
+            role = "User" if msg["role"] == "user" else "Assistant"
+            history_text += f"{role}: {msg['content'][:200]}\n"
 
     user_message = f"""Here are the relevant research abstracts:
 
 {context}
-
+{history_text}
 Question: {question}
 
 Answer using only the above sources and cite them."""
