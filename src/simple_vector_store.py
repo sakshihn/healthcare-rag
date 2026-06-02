@@ -1,32 +1,13 @@
-import numpy as np
-import json
-import os
-import sys
-sys.path.append('src')
-from sentence_transformers import SentenceTransformer
-from utils import load_json, save_json
+_embedder = None
 
-STORE_PATH = 'data/vectorstore_simple'
-EMBED_MODEL = 'all-MiniLM-L6-v2'
-
-def build_simple_store():
-    os.makedirs(STORE_PATH, exist_ok=True)
-    chunks = load_json('data/processed/chunks.json')
-    print(f"Embedding {len(chunks)} chunks...")
-    embedder = SentenceTransformer(EMBED_MODEL)
-    texts = [c['text'] for c in chunks]
-    embeddings = embedder.encode(texts, show_progress_bar=True)
-    np.save(f'{STORE_PATH}/embeddings.npy', embeddings)
-    save_json(chunks, f'{STORE_PATH}/chunks.json')
-    print(f"Done! Saved {len(chunks)} chunks")
-
-def load_simple_store():
-    embeddings = np.load(f'{STORE_PATH}/embeddings.npy')
-    chunks = load_json(f'{STORE_PATH}/chunks.json')
-    return embeddings, chunks
+def get_embedder():
+    global _embedder
+    if _embedder is None:
+        _embedder = SentenceTransformer(EMBED_MODEL)
+    return _embedder
 
 def simple_retrieve(query, n_results=5):
-    embedder = SentenceTransformer(EMBED_MODEL)
+    embedder = get_embedder()
     embeddings, chunks = load_simple_store()
     query_embedding = embedder.encode([query])[0]
     similarities = np.dot(embeddings, query_embedding) / (
@@ -42,6 +23,3 @@ def simple_retrieve(query, n_results=5):
             'similarity': round(float(similarities[i]), 3)
         })
     return results
-
-if __name__ == '__main__':
-    build_simple_store()

@@ -4,6 +4,13 @@ sys.path.append('src')
 
 import streamlit as st
 
+@st.cache_resource
+def load_embedder_and_store():
+    from simple_vector_store import get_embedder, load_simple_store
+    embedder = get_embedder()
+    embeddings, chunks = load_simple_store()
+    return embedder, embeddings, chunks
+
 if "GROQ_API_KEY" in st.secrets:
     os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
 
@@ -211,7 +218,7 @@ with col1:
                 unsafe_allow_html=True
             )
 
-            result = ask(question)
+            result = ask(question, chat_history=st.session_state.messages)
             thinking.empty()
 
             st.markdown(

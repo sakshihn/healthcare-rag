@@ -70,6 +70,9 @@ def build_vector_store():
     return collection
 
 
+import streamlit as st
+
+@st.cache_resource
 def load_vector_store():
     client = chromadb.PersistentClient(path=CHROMA_PATH)
     return client.get_collection(COLLECTION_NAME)

@@ -14,9 +14,8 @@ client = Groq(api_key=os.getenv('GROQ_API_KEY'))
 MODEL = 'llama-3.3-70b-versatile'
 
 
-def ask(question, n_chunks=5):
+def ask(question, n_chunks=5, chat_history=None):
     start = time.time()
-
     print(f"\nQuestion: {question}")
     print("Retrieving relevant chunks...")
     chunks = retrieve(question, n_results=n_chunks)
@@ -38,7 +37,7 @@ def ask(question, n_chunks=5):
     print(f"Found {len(chunks)} chunks (top similarity: {top_similarity})")
     print("Asking Groq...")
 
-    system_prompt, user_message = build_prompt(question, chunks)
+    system_prompt, user_message = build_prompt(question, chunks, chat_history)
 
     response = client.chat.completions.create(
         model=MODEL,
@@ -55,7 +54,6 @@ def ask(question, n_chunks=5):
     tokens = response.usage.total_tokens
 
     print(f"Done in {latency}s | tokens: {tokens}")
-
 
     return {
         'answer': answer,

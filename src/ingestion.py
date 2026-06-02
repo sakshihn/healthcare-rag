@@ -24,7 +24,7 @@ def fetch_abstract(pmid):
 if __name__ == "__main__":
     QUERY = "diabetes treatment insulin 2023"
     print(f"Fetching: {QUERY}")
-    ids = fetch_pubmed_ids(QUERY, max_results=500)
+    ids = fetch_pubmed_ids(QUERY, max_results=200)
     print(f"Found {len(ids)} articles")
 
     articles = []
