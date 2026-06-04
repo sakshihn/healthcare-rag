@@ -1,6 +1,6 @@
 # Complete Study Notes — Healthcare RAG Project
 
-### From Python Basics to Production AI — Everything You Built Explained
+### From Python Basics to Production AI — Everything I Built is Explained
 
 ---
 
